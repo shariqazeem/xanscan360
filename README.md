@@ -178,6 +178,45 @@ The **HUD-style stats display** features:
 
 ---
 
+### Deep Sleep Protocol (Cinematic Screensaver)
+
+After **30 seconds of inactivity**, the dashboard enters **Deep Sleep Mode** - a cinematic screensaver that transforms the interface:
+
+- **UI fades elegantly** with a dark overlay and backdrop blur
+- **Large holographic clock** with glowing cyan text shadow
+- **"SYSTEM MONITORING"** status indicator with pulsing shield icon
+- **Scanning line effect** sweeps across the screen
+- **Corner bracket decorations** in true sci-fi style
+- **Network status badges** showing ONLINE, UPTIME, and WATCHING
+- **Wake on interaction** - any mouse movement or keypress
+
+The globe **zooms in and rotates faster** during sleep mode, like a spinning hologram in standby.
+
+*"Even in sleep, the network never stops watching."*
+
+---
+
+### Density Mode (Data Visualization Toggle)
+
+Switch between two visualization modes with a single click:
+
+| Mode | Visualization |
+|------|---------------|
+| **SATELLITE** | Individual node points across the globe |
+| **DENSITY** | Hex-binned elevation showing node clustering |
+
+In Density Mode:
+- Nodes are grouped into **12° hexagonal bins**
+- Point **size and altitude** scale with node concentration
+- **Brighter colors** indicate higher density regions
+- Instantly see where nodes are clustered globally
+
+Toggle between modes using the **SATELLITE / DENSITY** buttons in the top-right corner.
+
+*"See the forest AND the trees."*
+
+---
+
 ## Easter Eggs
 
 ### Matrix Mode (`Ctrl + M`)
@@ -220,12 +259,13 @@ xanscan360/
 │   │   └── layout.tsx         # Root layout with SEO metadata
 │   ├── components/
 │   │   └── dashboard/
-│   │       ├── HeroGlobe.tsx        # 3D Globe with ping rings
+│   │       ├── HeroGlobe.tsx        # 3D Globe with ping rings + density mode
 │   │       ├── StatsHUD.tsx         # Floating statistics display
 │   │       ├── NodeGrid.tsx         # 3D tilt cards + Compare Mode
 │   │       ├── AINodeSelector.tsx   # Voice + NL search
 │   │       ├── CinematicIntro.tsx   # Boot sequence animation
-│   │       └── LiveGossipLog.tsx    # Real-time gossip terminal
+│   │       ├── LiveGossipLog.tsx    # Real-time gossip terminal
+│   │       └── DeepSleepMode.tsx    # Cinematic screensaver
 │   ├── hooks/
 │   │   ├── useXandeumNodes.ts     # pRPC data fetching
 │   │   └── useSoundEffects.ts     # Procedural audio system
@@ -344,6 +384,8 @@ All sounds are generated in real-time - no audio files required!
 - **AI-Powered Search** - "Show me fast nodes in Europe"
 - **Geospatial Ping Tracking** - Expanding rings prove network activity
 - **Network Health Indicator** - OPTIMAL/DEGRADED/CRITICAL status
+- **Deep Sleep Protocol** - Cinematic screensaver after 30s idle
+- **Density Mode Toggle** - Switch between satellite and hex-binned views
 - **Matrix Mode Easter Egg** - Press Ctrl+M for fun
 
 ### The X-Factor
