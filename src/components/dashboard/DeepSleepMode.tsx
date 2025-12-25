@@ -17,31 +17,40 @@ export function DeepSleepMode({ idleTimeout = 30000, onSleepChange }: DeepSleepM
   // Handle idle detection
   useEffect(() => {
     let idleTimer: NodeJS.Timeout;
+    let isCurrentlySleeping = false;
 
-    const resetTimer = () => {
-      if (isSleeping) {
-        setIsSleeping(false);
-        onSleepChange?.(false);
-      }
+    const startIdleTimer = () => {
       clearTimeout(idleTimer);
       idleTimer = setTimeout(() => {
+        isCurrentlySleeping = true;
         setIsSleeping(true);
         onSleepChange?.(true);
       }, idleTimeout);
     };
 
-    // Events that reset the timer
-    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
-    events.forEach(event => window.addEventListener(event, resetTimer));
+    const handleUserActivity = () => {
+      // Only wake up if currently sleeping
+      if (isCurrentlySleeping) {
+        isCurrentlySleeping = false;
+        setIsSleeping(false);
+        onSleepChange?.(false);
+      }
+      // Always restart the timer on activity
+      startIdleTimer();
+    };
 
-    // Initial timer
-    resetTimer();
+    // Events that indicate user activity
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => window.addEventListener(event, handleUserActivity));
+
+    // Start initial timer
+    startIdleTimer();
 
     return () => {
       clearTimeout(idleTimer);
-      events.forEach(event => window.removeEventListener(event, resetTimer));
+      events.forEach(event => window.removeEventListener(event, handleUserActivity));
     };
-  }, [idleTimeout, isSleeping, onSleepChange]);
+  }, [idleTimeout, onSleepChange]);
 
   // Update clock every second when sleeping
   useEffect(() => {
