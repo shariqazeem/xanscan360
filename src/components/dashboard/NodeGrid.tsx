@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Tilt } from 'react-tilt';
-import { Copy, Check, Wifi, WifiOff, Zap, HardDrive, ChevronDown, Search } from 'lucide-react';
+import { Copy, Check, Wifi, WifiOff, Zap, HardDrive, ChevronDown, Search, Cpu, MemoryStick, Clock } from 'lucide-react';
 import { XandeumNode } from '@/types/node';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 
@@ -62,6 +62,23 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 function generateLatencyHistory(): number[] {
   const base = 20 + Math.random() * 80;
   return Array.from({ length: 20 }, () => base + (Math.random() - 0.5) * 40);
+}
+
+// Format uptime from seconds to human readable
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h`;
+  return `${Math.floor(seconds / 60)}m`;
+}
+
+// Format bytes to human readable
+function formatBytes(bytes: number): string {
+  if (bytes >= 1099511627776) return `${(bytes / 1099511627776).toFixed(1)} TB`;
+  if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(1)} GB`;
+  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MB`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
 // Node card component
@@ -151,19 +168,55 @@ function NodeCard({ node, index }: { node: XandeumNode; index: number }) {
             </div>
           </div>
 
-          {/* Stats grid */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div className="text-center p-2 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <div className="text-xs text-slate-400 mb-1 font-mono">Version</div>
-              <div className="text-sm font-mono text-cyan-400">{node.version}</div>
+          {/* Stats grid - 2x2 for better data density */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <div className="p-2 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <div className="flex items-center gap-1 text-xs text-slate-400 mb-1 font-mono">
+                <Cpu className="w-3 h-3" /> CPU
+              </div>
+              <div className="text-sm font-mono text-cyan-400">
+                {node.cpuPercent ? `${node.cpuPercent.toFixed(1)}%` : 'N/A'}
+              </div>
+              {node.cpuPercent !== undefined && (
+                <div className="mt-1 h-1 bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all"
+                    style={{ width: `${Math.min(node.cpuPercent, 100)}%` }}
+                  />
+                </div>
+              )}
             </div>
-            <div className="text-center p-2 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <div className="text-xs text-slate-400 mb-1 font-mono">Uptime</div>
-              <div className="text-sm font-mono text-green-400">{uptime.toFixed(1)}%</div>
+            <div className="p-2 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <div className="flex items-center gap-1 text-xs text-slate-400 mb-1 font-mono">
+                <MemoryStick className="w-3 h-3" /> RAM
+              </div>
+              <div className="text-sm font-mono text-purple-400">
+                {node.ramUsed && node.ramTotal
+                  ? `${((node.ramUsed / node.ramTotal) * 100).toFixed(0)}%`
+                  : 'N/A'}
+              </div>
+              {node.ramUsed !== undefined && node.ramTotal !== undefined && (
+                <div className="mt-1 h-1 bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                    style={{ width: `${Math.min((node.ramUsed / node.ramTotal) * 100, 100)}%` }}
+                  />
+                </div>
+              )}
             </div>
-            <div className="text-center p-2 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <div className="text-xs text-slate-400 mb-1 font-mono">Latency</div>
+            <div className="p-2 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <div className="flex items-center gap-1 text-xs text-slate-400 mb-1 font-mono">
+                <Zap className="w-3 h-3" /> Latency
+              </div>
               <div className="text-sm font-mono" style={{ color: latencyColor }}>{node.latency}ms</div>
+            </div>
+            <div className="p-2 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <div className="flex items-center gap-1 text-xs text-slate-400 mb-1 font-mono">
+                <Clock className="w-3 h-3" /> Uptime
+              </div>
+              <div className="text-sm font-mono text-green-400">
+                {node.uptime ? formatUptime(node.uptime) : `${uptime.toFixed(0)}%`}
+              </div>
             </div>
           </div>
 
@@ -209,23 +262,55 @@ function NodeCard({ node, index }: { node: XandeumNode; index: number }) {
               exit={{ height: 0, opacity: 0 }}
               className="mt-4 pt-4 border-t border-slate-700/50"
             >
-              <div className="space-y-2 text-xs font-mono">
+              {/* Network Info */}
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2 font-mono">Network Info</div>
+              <div className="space-y-2 text-xs font-mono mb-4">
                 <div className="flex justify-between">
                   <span className="text-slate-400">IP Address</span>
                   <span className="text-white">{node.ip}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Gossip Port</span>
+                  <span className="text-slate-400">Gossip</span>
                   <span className="text-white">{node.gossip || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">TPU Port</span>
-                  <span className="text-white">{node.tpu || 'N/A'}</span>
+                  <span className="text-slate-400">Version</span>
+                  <span className="text-cyan-400">{node.version}</span>
                 </div>
-                {node.pubkey && (
-                  <div className="flex justify-between flex-col gap-1">
-                    <span className="text-slate-400">Pubkey</span>
-                    <span className="text-cyan-500 break-all text-[10px]">{node.pubkey}</span>
+              </div>
+
+              {/* Storage Stats */}
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2 font-mono">Storage Stats</div>
+              <div className="space-y-2 text-xs font-mono mb-4">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Storage Used</span>
+                  <span className="text-purple-400">{node.storageBytes ? formatBytes(node.storageBytes) : `${node.storage} GB`}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Storage Pages</span>
+                  <span className="text-white">{node.storagePages?.toLocaleString() || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Active Streams</span>
+                  <span className="text-green-400">{node.activeStreams ?? 'N/A'}</span>
+                </div>
+              </div>
+
+              {/* Network Activity */}
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2 font-mono">Network Activity</div>
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Packets RX</span>
+                  <span className="text-cyan-400">{node.packetsReceived?.toLocaleString() || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Packets TX</span>
+                  <span className="text-pink-400">{node.packetsSent?.toLocaleString() || 'N/A'}</span>
+                </div>
+                {node.lastSeen && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Last Seen</span>
+                    <span className="text-slate-300">{new Date(node.lastSeen).toLocaleTimeString()}</span>
                   </div>
                 )}
               </div>

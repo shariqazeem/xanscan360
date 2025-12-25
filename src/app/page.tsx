@@ -5,10 +5,49 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useXandeumNodes, useNetworkInfo } from '@/hooks/useXandeumNodes';
 import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Database, Cpu, Menu, X, Github } from 'lucide-react';
+import { RefreshCw, Database, Cpu, Menu, X, Github, Shield, Download } from 'lucide-react';
 import { XandeumNode } from '@/types/node';
 import { ParsedQuery } from '@/lib/nl-parser';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+
+// Calculate network health based on active nodes and latency
+function getNetworkHealth(stats: { activeNodes: number; totalNodes: number; averageLatency: number }) {
+  const activePercent = stats.totalNodes > 0 ? (stats.activeNodes / stats.totalNodes) * 100 : 0;
+  const latencyScore = stats.averageLatency < 100 ? 100 : stats.averageLatency < 200 ? 70 : 40;
+  const healthScore = (activePercent * 0.7 + latencyScore * 0.3);
+
+  if (healthScore >= 80) return { status: 'OPTIMAL', color: 'text-green-400', bg: 'bg-green-500', glow: 'shadow-green-500/50' };
+  if (healthScore >= 50) return { status: 'DEGRADED', color: 'text-yellow-400', bg: 'bg-yellow-500', glow: 'shadow-yellow-500/50' };
+  return { status: 'CRITICAL', color: 'text-red-400', bg: 'bg-red-500', glow: 'shadow-red-500/50' };
+}
+
+// Export nodes to CSV
+function exportToCSV(nodes: XandeumNode[]) {
+  const headers = ['ID', 'IP', 'Status', 'Version', 'Latency (ms)', 'CPU %', 'RAM %', 'Storage (GB)', 'Country', 'City', 'Uptime', 'Last Seen'];
+  const rows = nodes.map(node => [
+    node.id,
+    node.ip,
+    node.status,
+    node.version,
+    node.latency,
+    node.cpuPercent?.toFixed(1) || 'N/A',
+    node.ramUsed && node.ramTotal ? ((node.ramUsed / node.ramTotal) * 100).toFixed(1) : 'N/A',
+    node.storage,
+    node.location.country,
+    node.location.city || 'N/A',
+    node.uptime ? `${Math.floor(node.uptime / 86400)}d` : 'N/A',
+    node.lastSeen || 'N/A'
+  ]);
+
+  const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `xanscan360-nodes-${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function CommandCenter() {
   const [forceMock, setForceMock] = useState(false);
@@ -143,17 +182,24 @@ export default function CommandCenter() {
                   </div>
                 </div>
 
-                {/* Center - System Status */}
-                <div className="hidden lg:flex items-center gap-6 px-6 py-2 rounded-full border border-slate-700/50 bg-slate-900/50">
+                {/* Center - System Status with Health Indicator */}
+                <div className="hidden lg:flex items-center gap-4 px-5 py-2 rounded-full border border-slate-700/50 bg-slate-900/50">
+                  {/* Network Health Badge */}
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${getNetworkHealth(stats).bg}/20 border-current ${getNetworkHealth(stats).color}`}>
+                    <Shield className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold font-mono tracking-wider">{getNetworkHealth(stats).status}</span>
+                    <div className={`w-2 h-2 rounded-full ${getNetworkHealth(stats).bg} animate-pulse shadow-lg ${getNetworkHealth(stats).glow}`} />
+                  </div>
+                  <div className="w-px h-4 bg-slate-700" />
                   <div className="flex items-center gap-2 text-xs font-mono">
                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
                     <span className="text-slate-500">NODES</span>
-                    <span className="text-cyan-400 font-bold">{stats.activeNodes}</span>
+                    <span className="text-cyan-400 font-bold">{stats.activeNodes}/{stats.totalNodes}</span>
                   </div>
                   <div className="w-px h-4 bg-slate-700" />
                   <div className="flex items-center gap-2 text-xs font-mono">
                     <span className="text-slate-500">LATENCY</span>
-                    <span className="text-green-400 font-bold">{stats.averageLatency}ms</span>
+                    <span className={`font-bold ${stats.averageLatency < 100 ? 'text-green-400' : stats.averageLatency < 200 ? 'text-yellow-400' : 'text-red-400'}`}>{stats.averageLatency}ms</span>
                   </div>
                   <div className="w-px h-4 bg-slate-700" />
                   <div className="flex items-center gap-2 text-xs font-mono">
@@ -164,6 +210,19 @@ export default function CommandCenter() {
 
                 {/* Desktop menu */}
                 <div className="hidden md:flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      exportToCSV(displayNodes);
+                      play('success');
+                    }}
+                    className="text-slate-400 hover:text-green-400 hover:bg-green-500/10 font-mono text-xs uppercase tracking-wider border border-transparent hover:border-green-500/30 transition-all"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </Button>
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -225,6 +284,13 @@ export default function CommandCenter() {
                 className="md:hidden bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 overflow-hidden"
               >
                 <div className="container mx-auto px-6 py-4 space-y-2">
+                  <button
+                    onClick={() => { exportToCSV(displayNodes); play('success'); setMobileMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-slate-400 hover:text-green-400 hover:bg-slate-800 font-mono text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    EXPORT CSV
+                  </button>
                   <button
                     onClick={() => { setForceMock(!forceMock); setMobileMenuOpen(false); }}
                     className="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 font-mono text-sm"

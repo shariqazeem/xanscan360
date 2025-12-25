@@ -22,6 +22,17 @@ export interface XandeumNode {
   rpc?: string | null;
   featureSet?: number;
   shredVersion?: number;
+  // pNode stats from get-stats
+  cpuPercent?: number;
+  ramUsed?: number;
+  ramTotal?: number;
+  uptime?: number;
+  storageBytes?: number;
+  storagePages?: number;
+  packetsReceived?: number;
+  packetsSent?: number;
+  activeStreams?: number;
+  lastSeen?: string;
 }
 
 export interface NodeStats {

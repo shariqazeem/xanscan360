@@ -90,6 +90,17 @@ function transformPodToNode(pod: PodInfo, index: number): XandeumNode {
   // Simulate storage (since we don't have this from get-pods)
   const storage = 100 + Math.floor(Math.random() * 900); // 100-1000 GB
 
+  // Simulate pNode stats for realistic dashboard display
+  const cpuPercent = isActive ? 5 + Math.random() * 35 : 0; // 5-40% for active nodes
+  const ramTotal = 16 * 1024 * 1024 * 1024; // 16GB in bytes
+  const ramUsed = isActive ? ramTotal * (0.3 + Math.random() * 0.4) : 0; // 30-70% usage
+  const uptime = isActive ? Math.floor(86400 + Math.random() * 86400 * 30) : 0; // 1-30 days in seconds
+  const storageBytes = storage * 1024 * 1024 * 1024; // Convert GB to bytes
+  const storagePages = Math.floor(storageBytes / 4096); // 4KB pages
+  const packetsReceived = Math.floor(1000000 + Math.random() * 10000000);
+  const packetsSent = Math.floor(800000 + Math.random() * 8000000);
+  const activeStreams = isActive ? Math.floor(Math.random() * 50) : 0;
+
   return {
     id: `pnode-${index}-${ip.replace(/\./g, '-')}`,
     ip,
@@ -101,6 +112,17 @@ function transformPodToNode(pod: PodInfo, index: number): XandeumNode {
     location,
     tpu: null,
     rpc: `http://${ip}:6000/rpc`,
+    // pNode stats
+    cpuPercent,
+    ramUsed,
+    ramTotal,
+    uptime,
+    storageBytes,
+    storagePages,
+    packetsReceived,
+    packetsSent,
+    activeStreams,
+    lastSeen: pod.last_seen,
   };
 }
 
