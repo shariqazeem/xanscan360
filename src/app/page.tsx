@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useXandeumNodes, useNetworkInfo } from '@/hooks/useXandeumNodes';
 import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro, LiveGossipLog, DeepSleepMode } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Database, Cpu, Menu, X, Github, Shield, Download, Satellite, BarChart3 } from 'lucide-react';
+import { RefreshCw, Database, Menu, X, Github, Shield, Download, Satellite, BarChart3 } from 'lucide-react';
 import { XandeumNode } from '@/types/node';
 import { ParsedQuery } from '@/lib/nl-parser';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
@@ -50,7 +50,6 @@ function exportToCSV(nodes: XandeumNode[]) {
 }
 
 export default function CommandCenter() {
-  const [forceMock, setForceMock] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [filteredNodes, setFilteredNodes] = useState<XandeumNode[] | null>(null);
   const [focusNodes, setFocusNodes] = useState<XandeumNode[]>([]);
@@ -60,8 +59,9 @@ export default function CommandCenter() {
   const [viewMode, setViewMode] = useState<'satellite' | 'density'>('satellite');
   const { play, startAmbient } = useSoundEffects();
 
+  // Always use live data from Xandeum network
   const { nodes, stats, isLoading, error, refetch, lastUpdated, dataSource } = useXandeumNodes({
-    forceMock,
+    forceMock: false,
   });
   const { info: networkInfo } = useNetworkInfo();
 
@@ -229,19 +229,6 @@ export default function CommandCenter() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setForceMock(!forceMock);
-                      play('click');
-                    }}
-                    className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 font-mono text-xs uppercase tracking-wider border border-transparent hover:border-cyan-500/30 transition-all"
-                  >
-                    <Cpu className="w-4 h-4 mr-2" />
-                    {forceMock ? 'Live' : 'Demo'}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
                       refetch();
                       play('scan');
                     }}
@@ -292,13 +279,6 @@ export default function CommandCenter() {
                   >
                     <Download className="w-4 h-4" />
                     EXPORT CSV
-                  </button>
-                  <button
-                    onClick={() => { setForceMock(!forceMock); setMobileMenuOpen(false); }}
-                    className="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 font-mono text-sm"
-                  >
-                    <Cpu className="w-4 h-4" />
-                    {forceMock ? 'SWITCH TO LIVE' : 'SWITCH TO DEMO'}
                   </button>
                   <button
                     onClick={() => { refetch(); setMobileMenuOpen(false); }}
