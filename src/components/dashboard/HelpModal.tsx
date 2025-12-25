@@ -74,13 +74,13 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[201] w-full max-w-lg"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[201] flex items-center justify-center p-4"
           >
-            <div className="relative mx-4">
+            <div className="relative w-full max-w-lg">
               {/* Glow effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 rounded-2xl blur-xl" />
 
@@ -161,22 +161,9 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   );
 }
 
-// Hook to manage help modal state with first-visit auto-show
+// Hook to manage help modal state
 export function useHelpModal() {
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    // Check if user has seen help before
-    const seen = localStorage.getItem('xanscan360-help-seen');
-    if (!seen) {
-      // Show help modal on first visit after a short delay
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-        localStorage.setItem('xanscan360-help-seen', 'true');
-      }, 2000); // Show 2 seconds after page loads
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   // Listen for ? key press
   useEffect(() => {
