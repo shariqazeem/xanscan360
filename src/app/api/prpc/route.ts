@@ -1,21 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
+import nodeFetch, { RequestInit } from 'node-fetch';
 
 /**
  * pRPC Proxy Route
  *
  * Forwards JSON-RPC requests to pNode endpoints to bypass CORS restrictions.
+ * Uses node-fetch to bypass Node.js port restrictions (port 6000 is blocked by undici).
  * Tries multiple endpoints and returns the first successful response.
  */
 
 // pNode RPC endpoints to try (in order of priority)
 const PRPC_ENDPOINTS = [
   process.env.PRPC_ENDPOINT,                    // Custom endpoint from env
-  'http://173.212.207.32:6000/rpc',             // Bootstrap node
-  'http://95.217.229.171:6000/rpc',             // Atlas server (may have pRPC)
+  'http://173.212.207.32:6000/rpc',             // Bootstrap node (confirmed working)
 ].filter(Boolean) as string[];
 
 // Timeout for each endpoint attempt
 const ENDPOINT_TIMEOUT = 10000; // 10 seconds
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeout: number) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await nodeFetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,22 +56,20 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`[pRPC Proxy] Trying endpoint: ${endpoint}`);
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), ENDPOINT_TIMEOUT);
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        const response = await fetchWithTimeout(
+          endpoint,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
           },
-          body: JSON.stringify(body),
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
+          ENDPOINT_TIMEOUT
+        );
 
         if (response.ok) {
-          const data = await response.json();
+          const data = await response.json() as { result?: unknown; error?: unknown };
 
           // Check if it's a valid JSON-RPC response
           if (data.result !== undefined || data.error) {
@@ -104,20 +118,18 @@ export async function GET() {
   // Quick health check on all endpoints
   for (const endpoint of PRPC_ENDPOINTS) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', method: 'get-version', id: 1 }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
+      const response = await fetchWithTimeout(
+        endpoint,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', method: 'get-version', id: 1 }),
+        },
+        3000
+      );
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json() as { result?: { version?: string } };
         if (data.result?.version) {
           endpointStatus[endpoint] = `online (v${data.result.version})`;
         } else {
