@@ -3,9 +3,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useXandeumNodes, useNetworkInfo } from '@/hooks/useXandeumNodes';
-import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro, LiveGossipLog } from '@/components/dashboard';
+import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro, LiveGossipLog, DeepSleepMode } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Database, Cpu, Menu, X, Github, Shield, Download } from 'lucide-react';
+import { RefreshCw, Database, Cpu, Menu, X, Github, Shield, Download, Satellite, BarChart3 } from 'lucide-react';
 import { XandeumNode } from '@/types/node';
 import { ParsedQuery } from '@/lib/nl-parser';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
@@ -56,6 +56,8 @@ export default function CommandCenter() {
   const [focusNodes, setFocusNodes] = useState<XandeumNode[]>([]);
   const [activeQuery, setActiveQuery] = useState<ParsedQuery | null>(null);
   const [showIntro, setShowIntro] = useState(true);
+  const [isSleepMode, setIsSleepMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'satellite' | 'density'>('satellite');
   const { play, startAmbient } = useSoundEffects();
 
   const { nodes, stats, isLoading, error, refetch, lastUpdated, dataSource } = useXandeumNodes({
@@ -313,7 +315,33 @@ export default function CommandCenter() {
 
         {/* Hero Section with Globe */}
         <section className="relative pt-16">
-          <HeroGlobe nodes={nodes} focusNodes={focusNodes} isLoading={isLoading} />
+          {/* View Mode Toggle */}
+          <div className="absolute top-20 right-6 z-30 flex items-center gap-1 p-1 rounded-lg bg-slate-900/80 backdrop-blur-sm border border-slate-700/50">
+            <button
+              onClick={() => { setViewMode('satellite'); play('click'); }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono transition-all ${
+                viewMode === 'satellite'
+                  ? 'bg-cyan-500 text-slate-900 shadow-lg shadow-cyan-500/30'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Satellite className="w-3.5 h-3.5" />
+              SATELLITE
+            </button>
+            <button
+              onClick={() => { setViewMode('density'); play('click'); }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono transition-all ${
+                viewMode === 'density'
+                  ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              DENSITY
+            </button>
+          </div>
+
+          <HeroGlobe nodes={nodes} focusNodes={focusNodes} isLoading={isLoading} isSleepMode={isSleepMode} viewMode={viewMode} />
           {/* Overlay gradient for smooth transition */}
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
 
@@ -387,8 +415,11 @@ export default function CommandCenter() {
           <NodeGrid nodes={displayNodes} isLoading={isLoading} />
         </section>
 
-        {/* Live Gossip Log - only show after intro */}
-        {!showIntro && <LiveGossipLog nodes={nodes} />}
+        {/* Live Gossip Log - only show after intro and not in sleep mode */}
+        {!showIntro && !isSleepMode && <LiveGossipLog nodes={nodes} />}
+
+        {/* Deep Sleep Mode (Screensaver) */}
+        {!showIntro && <DeepSleepMode idleTimeout={30000} onSleepChange={setIsSleepMode} />}
 
         {/* Footer */}
         <footer className="relative z-10 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-sm">

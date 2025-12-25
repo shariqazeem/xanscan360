@@ -18,6 +18,8 @@ interface HeroGlobeProps {
   nodes: XandeumNode[];
   focusNodes?: XandeumNode[];
   isLoading?: boolean;
+  isSleepMode?: boolean;
+  viewMode?: 'satellite' | 'density';
 }
 
 interface GlobePoint {
@@ -34,7 +36,7 @@ export interface HeroGlobeRef {
 }
 
 export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroGlobe(
-  { nodes, focusNodes, isLoading },
+  { nodes, focusNodes, isLoading, isSleepMode = false, viewMode = 'satellite' },
   ref
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,6 +123,21 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
     }
   }, [globeReady]);
 
+  // Sleep mode effect - zoom in and rotate faster
+  useEffect(() => {
+    if (!globeRef.current || !globeReady) return;
+
+    if (isSleepMode) {
+      // Dramatic zoom and fast rotation for screensaver
+      globeRef.current.controls().autoRotateSpeed = 1.5;
+      globeRef.current.pointOfView({ lat: 30, lng: 0, altitude: 1.8 }, 2000);
+    } else {
+      // Normal mode
+      globeRef.current.controls().autoRotateSpeed = 0.5;
+      globeRef.current.pointOfView({ lat: 20, lng: 0, altitude: 2.5 }, 1500);
+    }
+  }, [isSleepMode, globeReady]);
+
   // Track mouse position for tooltip
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -195,6 +212,41 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
 
     return () => clearInterval(interval);
   }, [nodes]);
+
+  // Generate hex density data for density mode (shown as elevated points)
+  const densityPointsData = useMemo(() => {
+    if (viewMode !== 'density' || nodes.length === 0) return [];
+
+    // Group nodes by approximate hex bins
+    const binSize = 12;
+    const bins: Map<string, { lat: number; lng: number; count: number }> = new Map();
+
+    nodes.forEach(node => {
+      const binLat = Math.floor(node.location.lat / binSize) * binSize + binSize / 2;
+      const binLng = Math.floor(node.location.lng / binSize) * binSize + binSize / 2;
+      const key = `${binLat},${binLng}`;
+
+      if (!bins.has(key)) {
+        bins.set(key, { lat: binLat, lng: binLng, count: 0 });
+      }
+      bins.get(key)!.count++;
+    });
+
+    const maxCount = Math.max(...Array.from(bins.values()).map(b => b.count));
+
+    return Array.from(bins.values()).map(bin => ({
+      lat: bin.lat,
+      lng: bin.lng,
+      size: 0.3 + (bin.count / maxCount) * 1.5, // Size based on density
+      altitude: 0.01 + (bin.count / maxCount) * 0.15, // Elevation based on density
+      color: bin.count > maxCount * 0.7
+        ? '#00ffff'   // Cyan for high density
+        : bin.count > maxCount * 0.4
+        ? '#8b5cf6'   // Purple for medium
+        : '#22c55e',  // Green for low
+      count: bin.count,
+    }));
+  }, [nodes, viewMode]);
 
   // Memoize arcs data to prevent flickering - create network mesh effect
   const arcsData = useMemo(() => {
@@ -296,12 +348,12 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
           bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
           backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-          pointsData={pointsData}
+          pointsData={viewMode === 'density' ? densityPointsData : pointsData}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
           pointRadius="size"
-          pointAltitude={0.01}
+          pointAltitude={viewMode === 'density' ? 'altitude' : 0.01}
           pointsMerge={false}
           onPointHover={handlePointHover as (point: object | null, prevPoint: object | null) => void}
           atmosphereColor="#00ffff"
