@@ -47,18 +47,19 @@ When you first load XanScan 360, you're greeted with a **Hollywood-grade boot se
 
 ---
 
-### The Holographic Globe
+### The Holographic Globe with Geospatial Ping Tracking
 
 A fully interactive **3D Earth visualization** showing:
 
 - **Real-time pNode locations** across 6 continents
 - **Animated gossip protocol arcs** visualizing network communication
+- **Geospatial ping rings** - expanding ripples show live network activity
 - **Cyberpunk gradient data streams** (Cyan -> Purple -> Pink -> Green)
 - **Dynamic node highlighting** based on search queries
 - **Smooth auto-rotation** with manual control
 - **Atmospheric glow effects** with multi-layer halos
 
-The globe responds to your queries - search for "nodes in USA" and watch it smoothly pan to North America while highlighting matching nodes.
+The globe responds to your queries - search for "nodes in USA" and watch it smoothly pan to North America while highlighting matching nodes. **Ping rings pulse outward from active nodes**, proving the network is alive.
 
 ---
 
@@ -102,16 +103,57 @@ The search bar features:
 
 ---
 
-### 3D Tilt Node Cards
+### Live Gossip Terminal (The Heartbeat)
+
+A scrolling **system log** in the corner that shows raw network events in real-time:
+
+- **GOSSIP_RECV** - Incoming gossip protocol messages
+- **GOSSIP_PUSH** - Outgoing data propagation
+- **HEARTBEAT** - Node health checks with latency
+- **BLOCK_SYNC** - Ledger synchronization events
+- **PEER_CONNECT** - New node discoveries
+
+The terminal makes the dashboard feel **busy and connected**, like a real server room. Pause, expand, or minimize as needed.
+
+*"It's not just a dashboard. It's mission control."*
+
+---
+
+### Node Comparison Mode (The Analyst Tool)
+
+Select any **2 nodes** and compare them side-by-side:
+
+| Metric | Node A | Node B |
+|--------|--------|--------|
+| Latency | Color-coded winner | Color-coded loser |
+| CPU Usage | Real-time % | Real-time % |
+| RAM Usage | With progress bar | With progress bar |
+| Storage | Total capacity | Total capacity |
+| Status | Active/Offline | Active/Offline |
+
+Click "COMPARE" on any node card to select it. When 2 are selected, a **sticky comparison bar** appears at the bottom. Green = better, Red = worse.
+
+*"Because real analysts need real tools."*
+
+---
+
+### 3D Tilt Node Cards with Deep Stats
 
 Every node card responds to your mouse movement with a **smooth 3D parallax effect**:
 
 - 15° perspective tilt
 - Subtle scale on hover
 - Glassmorphic backdrop blur
-- Neon status indicators with pulse animations
+- **CPU & RAM usage** with animated progress bars
+- **Uptime display** in human-readable format
 - Real-time latency display with color coding
 - Copy-to-clipboard node IDs
+
+Expand any card to see **deep pNode statistics**:
+- Storage bytes & pages
+- Packets received/transmitted
+- Active streams count
+- Last seen timestamp
 
 *"It's like each card is a holographic display floating in space."*
 
@@ -175,14 +217,15 @@ xanscan360/
 │   ├── app/
 │   │   ├── page.tsx           # Command Center (main dashboard)
 │   │   ├── globals.css        # Cyberpunk styling system
-│   │   └── layout.tsx         # Root layout with fonts
+│   │   └── layout.tsx         # Root layout with SEO metadata
 │   ├── components/
 │   │   └── dashboard/
-│   │       ├── HeroGlobe.tsx        # 3D Globe with react-globe.gl
+│   │       ├── HeroGlobe.tsx        # 3D Globe with ping rings
 │   │       ├── StatsHUD.tsx         # Floating statistics display
-│   │       ├── NodeGrid.tsx         # 3D tilt node cards
+│   │       ├── NodeGrid.tsx         # 3D tilt cards + Compare Mode
 │   │       ├── AINodeSelector.tsx   # Voice + NL search
-│   │       └── CinematicIntro.tsx   # Boot sequence animation
+│   │       ├── CinematicIntro.tsx   # Boot sequence animation
+│   │       └── LiveGossipLog.tsx    # Real-time gossip terminal
 │   ├── hooks/
 │   │   ├── useXandeumNodes.ts     # pRPC data fetching
 │   │   └── useSoundEffects.ts     # Procedural audio system
@@ -280,14 +323,31 @@ All sounds are generated in real-time - no audio files required!
 
 ## Why XanScan 360 Should Win
 
-1. **Innovation**: Voice control for blockchain explorers? We did that.
-2. **Design**: Hollywood-grade visuals that make data beautiful.
-3. **Experience**: Every interaction is designed to delight.
-4. **Technical Excellence**: Clean architecture, type-safe, performant.
-5. **Easter Eggs**: Because we don't just build tools, we build experiences.
-6. **Real Utility**: Actually connects to Xandeum network via pRPC.
-7. **Accessibility**: Natural language makes blockchain data accessible to everyone.
-8. **Attention to Detail**: From scan lines to procedural audio, nothing is overlooked.
+### Functionality
+- **Real pRPC Integration** - Actually connects to Xandeum network
+- **Live Gossip Visualization** - See network events in real-time
+- **Node Comparison Mode** - Professional analytics tool
+- **Export to CSV** - Download all node data
+
+### Clarity
+- **Intuitive UI** - Anyone can understand the data
+- **Color-coded metrics** - Green good, red bad, instant comprehension
+- **Natural language search** - No technical knowledge required
+
+### User Experience
+- **Voice Commands** - J.A.R.V.I.S. style control
+- **3D Globe with Ping Rings** - Geospatial activity visualization
+- **Cinematic Boot Sequence** - First impressions matter
+- **Procedural Sound Design** - Every click feels satisfying
+
+### Innovation
+- **AI-Powered Search** - "Show me fast nodes in Europe"
+- **Geospatial Ping Tracking** - Expanding rings prove network activity
+- **Network Health Indicator** - OPTIMAL/DEGRADED/CRITICAL status
+- **Matrix Mode Easter Egg** - Press Ctrl+M for fun
+
+### The X-Factor
+This isn't just a dashboard. It's what happens when you ask: *"What if Tony Stark built a blockchain explorer?"*
 
 ---
 

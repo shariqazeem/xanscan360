@@ -14,9 +14,14 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "XanScan 360 | Xandeum Network Analytics",
-  description: "Real-time analytics dashboard for Xandeum pNode network. Monitor storage nodes, network health, and performance metrics.",
-  keywords: ["Xandeum", "pNode", "Solana", "blockchain", "storage", "analytics", "dashboard"],
+  title: "XanScan 360 | Immersive Xandeum Analytics",
+  description: "Hollywood-grade analytics dashboard for Xandeum pNode network. Live gossip visualization, geospatial ping tracking, voice commands, and real-time network monitoring.",
+  keywords: ["Xandeum", "pNode", "Solana", "blockchain", "storage", "analytics", "dashboard", "3D globe", "network visualization"],
+  openGraph: {
+    title: "XanScan 360 | Immersive Xandeum Analytics",
+    description: "The cinematic command center for Xandeum Network. Monitor pNodes in real-time with voice commands and 3D visualization.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

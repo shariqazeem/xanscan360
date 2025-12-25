@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useXandeumNodes, useNetworkInfo } from '@/hooks/useXandeumNodes';
-import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro } from '@/components/dashboard';
+import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro, LiveGossipLog } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Database, Cpu, Menu, X, Github, Shield, Download } from 'lucide-react';
 import { XandeumNode } from '@/types/node';
@@ -386,6 +386,9 @@ export default function CommandCenter() {
         <section className="relative z-10 container mx-auto px-6 py-12">
           <NodeGrid nodes={displayNodes} isLoading={isLoading} />
         </section>
+
+        {/* Live Gossip Log - only show after intro */}
+        {!showIntro && <LiveGossipLog nodes={nodes} />}
 
         {/* Footer */}
         <footer className="relative z-10 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-sm">

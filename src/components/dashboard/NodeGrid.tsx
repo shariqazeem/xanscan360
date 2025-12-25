@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Tilt } from 'react-tilt';
 import { Copy, Check, Wifi, WifiOff, Zap, HardDrive, ChevronDown, Search, Cpu, MemoryStick, Clock } from 'lucide-react';
 import { XandeumNode } from '@/types/node';
@@ -20,6 +20,15 @@ const tiltOptions = {
 interface NodeGridProps {
   nodes: XandeumNode[];
   isLoading?: boolean;
+  onCompareNodes?: (nodes: XandeumNode[]) => void;
+}
+
+interface NodeCardProps {
+  node: XandeumNode;
+  index: number;
+  isSelected?: boolean;
+  onToggleCompare?: (node: XandeumNode) => void;
+  compareCount?: number;
 }
 
 // Mini sparkline component for latency visualization
@@ -82,10 +91,17 @@ function formatBytes(bytes: number): string {
 }
 
 // Node card component
-function NodeCard({ node, index }: { node: XandeumNode; index: number }) {
+function NodeCard({ node, index, isSelected, onToggleCompare, compareCount }: NodeCardProps) {
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { play } = useSoundEffects();
+
+  const handleCompareToggle = () => {
+    if (onToggleCompare) {
+      onToggleCompare(node);
+      play('click');
+    }
+  };
 
   const latencyHistory = useMemo(() => generateLatencyHistory(), []);
   const uptime = useMemo(() => 95 + Math.random() * 5, []);
@@ -156,15 +172,30 @@ function NodeCard({ node, index }: { node: XandeumNode; index: number }) {
               </div>
             </div>
 
-            {/* Status badge */}
-            <div className={`px-2 py-1 rounded text-xs font-bold uppercase font-mono ${node.status === 'active'
-                ? 'bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                : 'bg-red-500/10 text-red-400 border border-red-500/30'
-              }`}>
-              {node.status}
-              {node.status === 'active' && (
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 ml-2 animate-pulse" />
-              )}
+            {/* Status badge + Compare button */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCompareToggle}
+                disabled={!isSelected && compareCount === 2}
+                className={`px-2 py-1 rounded text-[10px] font-bold uppercase font-mono transition-all ${
+                  isSelected
+                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+                    : compareCount === 2
+                    ? 'bg-slate-800/50 text-slate-600 border border-slate-700/30 cursor-not-allowed'
+                    : 'bg-slate-800/50 text-slate-400 border border-slate-700/30 hover:border-cyan-500/30 hover:text-cyan-400'
+                }`}
+              >
+                {isSelected ? 'SELECTED' : 'COMPARE'}
+              </button>
+              <div className={`px-2 py-1 rounded text-xs font-bold uppercase font-mono ${node.status === 'active'
+                  ? 'bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
+                  : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                }`}>
+                {node.status}
+                {node.status === 'active' && (
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 ml-2 animate-pulse" />
+                )}
+              </div>
             </div>
           </div>
 
@@ -352,11 +383,134 @@ function NodeCard({ node, index }: { node: XandeumNode; index: number }) {
   );
 }
 
+// Comparison Bar Component
+function ComparisonBar({ nodes, onClear }: { nodes: XandeumNode[]; onClear: () => void }) {
+  const { play } = useSoundEffects();
+
+  if (nodes.length !== 2) return null;
+
+  const [nodeA, nodeB] = nodes;
+
+  const compareValue = (a: number | undefined, b: number | undefined, lowerIsBetter = false) => {
+    if (a === undefined || b === undefined) return { aClass: '', bClass: '' };
+    if (a === b) return { aClass: 'text-slate-400', bClass: 'text-slate-400' };
+    const aWins = lowerIsBetter ? a < b : a > b;
+    return {
+      aClass: aWins ? 'text-green-400' : 'text-red-400',
+      bClass: aWins ? 'text-red-400' : 'text-green-400',
+    };
+  };
+
+  const latencyCompare = compareValue(nodeA.latency, nodeB.latency, true);
+  const cpuCompare = compareValue(nodeA.cpuPercent, nodeB.cpuPercent, true);
+  const ramCompareA = nodeA.ramUsed && nodeA.ramTotal ? (nodeA.ramUsed / nodeA.ramTotal) * 100 : undefined;
+  const ramCompareB = nodeB.ramUsed && nodeB.ramTotal ? (nodeB.ramUsed / nodeB.ramTotal) * 100 : undefined;
+  const ramCompare = compareValue(ramCompareA, ramCompareB, true);
+  const storageCompare = compareValue(nodeA.storage, nodeB.storage);
+
+  return (
+    <motion.div
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 100, opacity: 0 }}
+      className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-xl border-t border-cyan-500/30 shadow-[0_-10px_40px_rgba(0,255,255,0.1)]"
+    >
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+            <h3 className="text-sm font-mono font-bold text-white tracking-wider">NODE COMPARISON</h3>
+          </div>
+          <button
+            onClick={() => { onClear(); play('click'); }}
+            className="px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-white border border-slate-700 hover:border-red-500/50 transition-all"
+          >
+            CLEAR
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 text-xs font-mono">
+          {/* Headers */}
+          <div className="text-center">
+            <div className="text-cyan-400 font-bold mb-2">{nodeA.id.slice(0, 16)}...</div>
+            <div className="text-slate-500">{nodeA.location.city || nodeA.location.country}</div>
+          </div>
+          <div className="text-center text-slate-600">VS</div>
+          <div className="text-center">
+            <div className="text-purple-400 font-bold mb-2">{nodeB.id.slice(0, 16)}...</div>
+            <div className="text-slate-500">{nodeB.location.city || nodeB.location.country}</div>
+          </div>
+
+          {/* Latency */}
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${latencyCompare.aClass}`}>
+            {nodeA.latency}ms
+          </div>
+          <div className="text-center text-slate-500 p-2">LATENCY</div>
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${latencyCompare.bClass}`}>
+            {nodeB.latency}ms
+          </div>
+
+          {/* CPU */}
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${cpuCompare.aClass}`}>
+            {nodeA.cpuPercent?.toFixed(1) || 'N/A'}%
+          </div>
+          <div className="text-center text-slate-500 p-2">CPU</div>
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${cpuCompare.bClass}`}>
+            {nodeB.cpuPercent?.toFixed(1) || 'N/A'}%
+          </div>
+
+          {/* RAM */}
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${ramCompare.aClass}`}>
+            {ramCompareA?.toFixed(0) || 'N/A'}%
+          </div>
+          <div className="text-center text-slate-500 p-2">RAM</div>
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${ramCompare.bClass}`}>
+            {ramCompareB?.toFixed(0) || 'N/A'}%
+          </div>
+
+          {/* Storage */}
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${storageCompare.aClass}`}>
+            {nodeA.storage} GB
+          </div>
+          <div className="text-center text-slate-500 p-2">STORAGE</div>
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${storageCompare.bClass}`}>
+            {nodeB.storage} GB
+          </div>
+
+          {/* Status */}
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${nodeA.status === 'active' ? 'text-green-400' : 'text-red-400'}`}>
+            {nodeA.status.toUpperCase()}
+          </div>
+          <div className="text-center text-slate-500 p-2">STATUS</div>
+          <div className={`text-center p-2 rounded bg-slate-900/50 ${nodeB.status === 'active' ? 'text-green-400' : 'text-red-400'}`}>
+            {nodeB.status.toUpperCase()}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export function NodeGrid({ nodes, isLoading }: NodeGridProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'offline'>('all');
   const [visibleCount, setVisibleCount] = useState(12);
+  const [compareNodes, setCompareNodes] = useState<XandeumNode[]>([]);
   const { play } = useSoundEffects();
+
+  const handleToggleCompare = (node: XandeumNode) => {
+    setCompareNodes(prev => {
+      const isSelected = prev.some(n => n.id === node.id);
+      if (isSelected) {
+        return prev.filter(n => n.id !== node.id);
+      } else if (prev.length < 2) {
+        return [...prev, node];
+      }
+      return prev;
+    });
+  };
+
+  const clearCompare = () => setCompareNodes([]);
 
   const filteredNodes = useMemo(() => {
     return nodes.filter((node) => {
@@ -457,7 +611,14 @@ export function NodeGrid({ nodes, isLoading }: NodeGridProps) {
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {displayedNodes.map((node, index) => (
-              <NodeCard key={node.id} node={node} index={index} />
+              <NodeCard
+                key={node.id}
+                node={node}
+                index={index}
+                isSelected={compareNodes.some(n => n.id === node.id)}
+                onToggleCompare={handleToggleCompare}
+                compareCount={compareNodes.length}
+              />
             ))}
           </div>
 
@@ -492,6 +653,13 @@ export function NodeGrid({ nodes, isLoading }: NodeGridProps) {
           perspective: 1000px;
         }
       `}</style>
+
+      {/* Comparison Bar */}
+      <AnimatePresence>
+        {compareNodes.length === 2 && (
+          <ComparisonBar nodes={compareNodes} onClear={clearCompare} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

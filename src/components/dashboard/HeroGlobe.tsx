@@ -139,6 +139,63 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
     }
   }, []);
 
+  // State for ping rings animation
+  const [ringsData, setRingsData] = useState<Array<{
+    lat: number;
+    lng: number;
+    maxR: number;
+    propagationSpeed: number;
+    repeatPeriod: number;
+    color: string;
+  }>>([]);
+
+  // Generate ping rings periodically to simulate network activity
+  useEffect(() => {
+    if (nodes.length === 0) return;
+
+    const activeNodes = nodes.filter(n => n.status === 'active');
+    if (activeNodes.length === 0) return;
+
+    // Initial rings
+    const initialRings = activeNodes.slice(0, 3).map(node => ({
+      lat: node.location.lat,
+      lng: node.location.lng,
+      maxR: 3 + Math.random() * 2,
+      propagationSpeed: 2 + Math.random(),
+      repeatPeriod: 1500 + Math.random() * 1000,
+      color: 'rgba(0, 255, 255, 0.6)',
+    }));
+    setRingsData(initialRings);
+
+    // Add new rings periodically
+    const interval = setInterval(() => {
+      const randomNode = activeNodes[Math.floor(Math.random() * activeNodes.length)];
+      const colors = [
+        'rgba(0, 255, 255, 0.6)',   // Cyan
+        'rgba(139, 92, 246, 0.5)',  // Purple
+        'rgba(34, 197, 94, 0.5)',   // Green
+        'rgba(236, 72, 153, 0.4)',  // Pink
+      ];
+
+      setRingsData(prev => {
+        const newRing = {
+          lat: randomNode.location.lat,
+          lng: randomNode.location.lng,
+          maxR: 2 + Math.random() * 3,
+          propagationSpeed: 1.5 + Math.random() * 2,
+          repeatPeriod: 1200 + Math.random() * 800,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        };
+
+        // Keep only last 8 rings for performance
+        const updated = [...prev, newRing].slice(-8);
+        return updated;
+      });
+    }, 1500 + Math.random() * 1500);
+
+    return () => clearInterval(interval);
+  }, [nodes]);
+
   // Memoize arcs data to prevent flickering - create network mesh effect
   const arcsData = useMemo(() => {
     if (nodes.length < 3) return [];
@@ -260,6 +317,11 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
           arcStroke={0.5}
           arcAltitude={0.15}
           arcsTransitionDuration={0}
+          ringsData={ringsData}
+          ringColor="color"
+          ringMaxRadius="maxR"
+          ringPropagationSpeed="propagationSpeed"
+          ringRepeatPeriod="repeatPeriod"
         />
       </div>
 
