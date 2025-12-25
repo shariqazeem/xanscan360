@@ -4,23 +4,6 @@ import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardR
 import dynamic from 'next/dynamic';
 import { XandeumNode } from '@/types/node';
 
-// Globe texture URLs - we preload these for consistent timing
-const GLOBE_TEXTURES = {
-  globe: '//unpkg.com/three-globe/example/img/earth-night.jpg',
-  bump: '//unpkg.com/three-globe/example/img/earth-topology.png',
-  background: '//unpkg.com/three-globe/example/img/night-sky.png',
-};
-
-// Preload images function
-const preloadImage = (src: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error(`Failed to load ${src}`));
-    img.src = src.startsWith('//') ? `https:${src}` : src;
-  });
-};
-
 // Dynamically import Globe to avoid SSR issues
 const Globe = dynamic(() => import('react-globe.gl'), {
   ssr: false,
@@ -55,37 +38,8 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globeRef = useRef<any>(null);
   const [globeReady, setGlobeReady] = useState(false);
-  const [texturesLoaded, setTexturesLoaded] = useState(false);
-  const [showGlobe, setShowGlobe] = useState(false);
   const [hoveredNode, setHoveredNode] = useState<XandeumNode | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
-
-  // Preload textures on mount for consistent loading
-  useEffect(() => {
-    const preloadTextures = async () => {
-      try {
-        await Promise.all([
-          preloadImage(GLOBE_TEXTURES.globe),
-          preloadImage(GLOBE_TEXTURES.bump),
-          preloadImage(GLOBE_TEXTURES.background),
-        ]);
-        setTexturesLoaded(true);
-      } catch (error) {
-        console.warn('Some textures failed to preload, continuing anyway:', error);
-        setTexturesLoaded(true); // Continue anyway
-      }
-    };
-    preloadTextures();
-  }, []);
-
-  // Show globe with fade-in once everything is ready
-  useEffect(() => {
-    if (globeReady && texturesLoaded) {
-      // Small delay to ensure smooth transition
-      const timer = setTimeout(() => setShowGlobe(true), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [globeReady, texturesLoaded]);
 
   // Create a set of focused node IDs for quick lookup
   const focusedNodeIds = new Set(focusNodes?.map(n => n.id) || []);
@@ -352,9 +306,6 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
     return arcs;
   }, [nodes]);
 
-  // Whether globe is fully loaded and ready to show
-  const isFullyReady = showGlobe && texturesLoaded && globeReady;
-
   return (
     <div className="relative w-full h-[600px] lg:h-[700px] overflow-hidden">
       {/* Cyberpunk grid background */}
@@ -386,8 +337,8 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
       {/* Purple accent halo */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-purple-500/5 blur-[60px] pointer-events-none" />
 
-      {/* Globe Loading Animation - Shows until globe is fully ready */}
-      {!isFullyReady && (
+      {/* Globe Loading Animation - Shows until globe is ready */}
+      {!globeReady && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="flex flex-col items-center gap-6">
             {/* Animated globe placeholder */}
@@ -425,11 +376,10 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
 
       {/* Globe container - with fade-in transition */}
       <div
-        className="relative w-full h-full transition-opacity duration-700"
-        style={{ opacity: isFullyReady ? 1 : 0 }}
+        className="relative w-full h-full transition-opacity duration-500"
+        style={{ opacity: globeReady ? 1 : 0 }}
       >
-        {texturesLoaded && (
-          <Globe
+        <Globe
           ref={globeRef}
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
           bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
@@ -461,7 +411,6 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
           ringPropagationSpeed="propagationSpeed"
           ringRepeatPeriod="repeatPeriod"
         />
-        )}
       </div>
 
       {/* Hover Tooltip - Holographic HUD style */}
