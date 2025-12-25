@@ -4,14 +4,27 @@ import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardR
 import dynamic from 'next/dynamic';
 import { XandeumNode } from '@/types/node';
 
+// Globe texture URLs - we preload these for consistent timing
+const GLOBE_TEXTURES = {
+  globe: '//unpkg.com/three-globe/example/img/earth-night.jpg',
+  bump: '//unpkg.com/three-globe/example/img/earth-topology.png',
+  background: '//unpkg.com/three-globe/example/img/night-sky.png',
+};
+
+// Preload images function
+const preloadImage = (src: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error(`Failed to load ${src}`));
+    img.src = src.startsWith('//') ? `https:${src}` : src;
+  });
+};
+
 // Dynamically import Globe to avoid SSR issues
 const Globe = dynamic(() => import('react-globe.gl'), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="text-cyan-400 animate-pulse">Initializing Globe...</div>
-    </div>
-  ),
+  loading: () => null, // We handle loading state ourselves
 });
 
 interface HeroGlobeProps {
@@ -42,8 +55,37 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globeRef = useRef<any>(null);
   const [globeReady, setGlobeReady] = useState(false);
+  const [texturesLoaded, setTexturesLoaded] = useState(false);
+  const [showGlobe, setShowGlobe] = useState(false);
   const [hoveredNode, setHoveredNode] = useState<XandeumNode | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+
+  // Preload textures on mount for consistent loading
+  useEffect(() => {
+    const preloadTextures = async () => {
+      try {
+        await Promise.all([
+          preloadImage(GLOBE_TEXTURES.globe),
+          preloadImage(GLOBE_TEXTURES.bump),
+          preloadImage(GLOBE_TEXTURES.background),
+        ]);
+        setTexturesLoaded(true);
+      } catch (error) {
+        console.warn('Some textures failed to preload, continuing anyway:', error);
+        setTexturesLoaded(true); // Continue anyway
+      }
+    };
+    preloadTextures();
+  }, []);
+
+  // Show globe with fade-in once everything is ready
+  useEffect(() => {
+    if (globeReady && texturesLoaded) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => setShowGlobe(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [globeReady, texturesLoaded]);
 
   // Create a set of focused node IDs for quick lookup
   const focusedNodeIds = new Set(focusNodes?.map(n => n.id) || []);
@@ -310,6 +352,9 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
     return arcs;
   }, [nodes]);
 
+  // Whether globe is fully loaded and ready to show
+  const isFullyReady = showGlobe && texturesLoaded && globeReady;
+
   return (
     <div className="relative w-full h-[600px] lg:h-[700px] overflow-hidden">
       {/* Cyberpunk grid background */}
@@ -341,9 +386,50 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
       {/* Purple accent halo */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-purple-500/5 blur-[60px] pointer-events-none" />
 
-      {/* Globe container */}
-      <div className="relative w-full h-full">
-        <Globe
+      {/* Globe Loading Animation - Shows until globe is fully ready */}
+      {!isFullyReady && (
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="flex flex-col items-center gap-6">
+            {/* Animated globe placeholder */}
+            <div className="relative">
+              {/* Outer spinning ring */}
+              <div className="w-48 h-48 rounded-full border-2 border-cyan-500/20 animate-spin" style={{ animationDuration: '8s' }}>
+                <div className="absolute top-0 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(0,255,255,0.8)]" />
+              </div>
+              {/* Middle counter-spinning ring */}
+              <div className="absolute inset-4 rounded-full border border-purple-500/30 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
+                <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 -translate-x-1/2 translate-y-1/2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+              </div>
+              {/* Inner pulsing core */}
+              <div className="absolute inset-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 animate-pulse" />
+              <div className="absolute inset-16 rounded-full bg-slate-900/80 flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-cyan-400/50 animate-ping" />
+              </div>
+              {/* Glow effect */}
+              <div className="absolute inset-0 rounded-full bg-cyan-500/10 blur-xl animate-pulse" />
+            </div>
+            {/* Loading text */}
+            <div className="text-center">
+              <div className="text-cyan-400 font-mono text-sm tracking-[0.3em] font-bold mb-2" style={{ textShadow: '0 0 10px rgba(0,255,255,0.5)' }}>
+                INITIALIZING GLOBE
+              </div>
+              <div className="flex items-center justify-center gap-1">
+                <div className="w-1 h-1 rounded-full bg-cyan-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1 h-1 rounded-full bg-cyan-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1 h-1 rounded-full bg-cyan-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Globe container - with fade-in transition */}
+      <div
+        className="relative w-full h-full transition-opacity duration-700"
+        style={{ opacity: isFullyReady ? 1 : 0 }}
+      >
+        {texturesLoaded && (
+          <Globe
           ref={globeRef}
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
           bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
@@ -375,6 +461,7 @@ export const HeroGlobe = forwardRef<HeroGlobeRef, HeroGlobeProps>(function HeroG
           ringPropagationSpeed="propagationSpeed"
           ringRepeatPeriod="repeatPeriod"
         />
+        )}
       </div>
 
       {/* Hover Tooltip - Holographic HUD style */}
