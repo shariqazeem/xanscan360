@@ -15,7 +15,7 @@
 
 <br />
 
-[Live Demo](https://xanscan360.vercel.app) | [Xandeum Network](https://xandeum.network) | [Documentation](https://docs.xandeum.network)
+[**LIVE DEMO**](https://xanscan360.vercel.app) | [Xandeum Network](https://xandeum.network) | [Documentation](https://docs.xandeum.network)
 
 ---
 
