@@ -3,9 +3,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useXandeumNodes, useNetworkInfo } from '@/hooks/useXandeumNodes';
-import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro, LiveGossipLog, DeepSleepMode } from '@/components/dashboard';
+import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro, LiveGossipLog, DeepSleepMode, HelpModal, useHelpModal } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Database, Menu, X, Github, Shield, Download, Satellite, BarChart3 } from 'lucide-react';
+import { RefreshCw, Database, Menu, X, Github, Shield, Download, Satellite, BarChart3, HelpCircle } from 'lucide-react';
 import { XandeumNode } from '@/types/node';
 import { ParsedQuery } from '@/lib/nl-parser';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
@@ -58,6 +58,7 @@ export default function CommandCenter() {
   const [isSleepMode, setIsSleepMode] = useState(false);
   const [viewMode, setViewMode] = useState<'satellite' | 'density'>('satellite');
   const { play, startAmbient } = useSoundEffects();
+  const helpModal = useHelpModal();
 
   // Always use live data from Xandeum network
   const { nodes, stats, isLoading, error, refetch, lastUpdated, dataSource } = useXandeumNodes({
@@ -241,8 +242,18 @@ export default function CommandCenter() {
 
                   <div className="w-px h-6 bg-slate-700 mx-1" />
 
+                  {/* Help Button */}
+                  <button
+                    onClick={() => { helpModal.open(); play('click'); }}
+                    className="p-2.5 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-500/20 transition-all border border-cyan-500/30 hover:border-cyan-500/50 relative group"
+                    title="System Controls (?)"
+                  >
+                    <HelpCircle className="w-5 h-5" />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+                  </button>
+
                   <a
-                    href="https://github.com"
+                    href="https://github.com/shariqazeem/xanscan360"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all border border-transparent hover:border-slate-600"
@@ -433,6 +444,9 @@ export default function CommandCenter() {
           </div>
         </footer>
       </motion.div>
+
+      {/* Help Modal - Shows system controls */}
+      <HelpModal isOpen={helpModal.isOpen} onClose={helpModal.close} />
     </div>
   );
 }

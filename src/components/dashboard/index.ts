@@ -5,3 +5,4 @@ export * from './AINodeSelector';
 export * from './CinematicIntro';
 export * from './LiveGossipLog';
 export * from './DeepSleepMode';
+export * from './HelpModal';
