@@ -1,36 +1,314 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+
+# XANSCAN 360
+
+### The Hollywood-Grade Command Center for Xandeum Network
+
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![Xandeum](https://img.shields.io/badge/Xandeum-Network-cyan?style=for-the-badge)](https://xandeum.network/)
+
+<br />
+
+*"Like stepping into a Marvel movie where you ARE the superhero monitoring the entire blockchain network"*
+
+<br />
+
+[Live Demo](https://xanscan360.vercel.app) | [Xandeum Network](https://xandeum.network) | [Documentation](https://docs.xandeum.network)
+
+---
+
+</div>
+
+## The Vision
+
+**XanScan 360** isn't just another blockchain explorer. It's a **cinematic experience** that transforms network monitoring into something you'd expect to see in Tony Stark's lab or aboard the USS Enterprise.
+
+We asked ourselves: *"What if blockchain explorers were designed by the teams behind The Avengers and Blade Runner?"*
+
+The result is a real-time network analytics dashboard that makes you FEEL like you're commanding a starship.
+
+---
+
+## Features That Will Blow Your Mind
+
+### Cinematic Boot Sequence
+
+When you first load XanScan 360, you're greeted with a **Hollywood-grade boot sequence** featuring:
+
+- Terminal-style initialization with realistic system checks
+- Procedurally generated sound effects using Web Audio API
+- CRT monitor turn-on effect with authentic scan lines
+- Progressive system status updates
+- Dramatic "NEURAL LINK ESTABLISHED" finale
+
+*"It's not just loading... it's an experience."*
+
+---
+
+### The Holographic Globe
+
+A fully interactive **3D Earth visualization** showing:
+
+- **Real-time pNode locations** across 6 continents
+- **Animated gossip protocol arcs** visualizing network communication
+- **Cyberpunk gradient data streams** (Cyan -> Purple -> Pink -> Green)
+- **Dynamic node highlighting** based on search queries
+- **Smooth auto-rotation** with manual control
+- **Atmospheric glow effects** with multi-layer halos
+
+The globe responds to your queries - search for "nodes in USA" and watch it smoothly pan to North America while highlighting matching nodes.
+
+---
+
+### J.A.R.V.I.S. Voice Command
+
+Yes, you read that right. **VOICE CONTROL.**
+
+Click the microphone button and speak naturally:
+
+> *"Show me active nodes in Europe"*
+> *"Find nodes with latency under 50 milliseconds"*
+> *"Display all inactive nodes"*
+
+Our natural language parser understands:
+- Location queries (country, region, city)
+- Status filters (active, inactive, all)
+- Performance metrics (latency ranges)
+- Complex combinations
+
+*"JARVIS, show me what we're working with."*
+
+---
+
+### AI-Powered Natural Language Search
+
+Forget complex query syntax. Just type like you're talking to a friend:
+
+| You Type | It Understands |
+|----------|----------------|
+| "fast nodes in asia" | Active nodes in Asia with low latency |
+| "show me Germany" | All nodes located in Germany |
+| "slow ones" | Nodes with high latency |
+| "everything that's down" | All inactive nodes |
+| "top performers" | Fastest responding nodes |
+
+The search bar features:
+- Real-time suggestions
+- Animated holographic styling
+- Voice input integration
+- Query result counter
+
+---
+
+### 3D Tilt Node Cards
+
+Every node card responds to your mouse movement with a **smooth 3D parallax effect**:
+
+- 15° perspective tilt
+- Subtle scale on hover
+- Glassmorphic backdrop blur
+- Neon status indicators with pulse animations
+- Real-time latency display with color coding
+- Copy-to-clipboard node IDs
+
+*"It's like each card is a holographic display floating in space."*
+
+---
+
+### Real-Time Network Statistics
+
+| Metric | Display |
+|--------|---------|
+| Active Nodes | Live count with pulse animation |
+| Network Latency | Color-coded performance indicator |
+| Total Stake | Formatted with glowing effect |
+| Global Regions | Country count coverage |
+| Slot Height | Current blockchain slot |
+| Epoch Progress | Visual progress bar |
+
+The **HUD-style stats display** features:
+- Floating holographic cards
+- Real-time data updates via pRPC
+- Animated value transitions
+- Cyberpunk corner accents
+
+---
+
+## Easter Eggs
+
+### Matrix Mode (`Ctrl + M`)
+
+Press `Ctrl + M` anywhere to activate **THE MATRIX**:
+- Everything turns green with sepia-hue rotation
+- Scanline overlay appears with animation
+- Monospace font takeover
+- Digital rain effect
+- Glitch sound effect
+
+*"Follow the white rabbit..."*
+
+---
+
+### Winner Celebration
+
+Type any of these magic words in the search:
+- **"winner"**
+- **"xandeum"**
+- **"hackathon"**
+- **"champion"**
+- **"victory"**
+
+Watch the screen EXPLODE with confetti while a toast declares:
+> "XANDEUM TAKES FIRST PLACE!"
+
+*We believe in manifesting success.*
+
+---
+
+## Technical Architecture
+
+```
+xanscan360/
+├── src/
+│   ├── app/
+│   │   ├── page.tsx           # Command Center (main dashboard)
+│   │   ├── globals.css        # Cyberpunk styling system
+│   │   └── layout.tsx         # Root layout with fonts
+│   ├── components/
+│   │   └── dashboard/
+│   │       ├── HeroGlobe.tsx        # 3D Globe with react-globe.gl
+│   │       ├── StatsHUD.tsx         # Floating statistics display
+│   │       ├── NodeGrid.tsx         # 3D tilt node cards
+│   │       ├── AINodeSelector.tsx   # Voice + NL search
+│   │       └── CinematicIntro.tsx   # Boot sequence animation
+│   ├── hooks/
+│   │   ├── useXandeumNodes.ts     # pRPC data fetching
+│   │   └── useSoundEffects.ts     # Procedural audio system
+│   ├── lib/
+│   │   ├── nl-parser.ts           # Natural language processing
+│   │   └── mock-nodes.ts          # Fallback demo data
+│   └── types/
+│       └── node.ts                # TypeScript definitions
+```
+
+### Key Technologies
+
+| Technology | Purpose |
+|------------|---------|
+| **Next.js 15** | React framework with App Router |
+| **TypeScript** | Type-safe development |
+| **Tailwind CSS** | Utility-first styling |
+| **Framer Motion** | Fluid animations |
+| **react-globe.gl** | 3D Earth visualization |
+| **Web Audio API** | Procedural sound generation |
+| **Web Speech API** | Voice recognition |
+| **react-tilt** | 3D parallax effects |
+| **canvas-confetti** | Celebration effects |
+| **pRPC** | Xandeum network integration |
+
+---
+
+## Live Data Integration
+
+XanScan 360 connects directly to the **Xandeum Network** via pRPC (JSON-RPC 2.0):
+
+```typescript
+// Real endpoints we query:
+POST https://xandeum.network/prpc
+
+// Methods:
+- prpc_getClusterNodes    // All pNode validators
+- getSlot                 // Current slot height
+- getEpochInfo            // Epoch progress
+- getHealth               // Network health status
+```
+
+When live data is unavailable, the system gracefully falls back to **realistic mock data** simulating a global network of 50+ nodes across 25 countries.
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/xanscan360.git
+
+# Navigate to directory
+cd xanscan360
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) and prepare to be amazed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## The Immersive Sound System
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+XanScan 360 features a **procedurally generated audio system** built entirely with the Web Audio API:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Ambient Hum**: Subtle spaceship-style drone at 40Hz, 80Hz, and 160Hz harmonics
+- **Click Sounds**: Satisfying UI feedback
+- **Scan Effect**: Deep bass thrum when refreshing data
+- **Success Chimes**: Triumphant tones for completed actions
+- **Alert Sounds**: Warning notifications
+- **Glitch Effects**: Matrix mode activation sound
 
-## Deploy on Vercel
+All sounds are generated in real-time - no audio files required!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Why XanScan 360 Should Win
+
+1. **Innovation**: Voice control for blockchain explorers? We did that.
+2. **Design**: Hollywood-grade visuals that make data beautiful.
+3. **Experience**: Every interaction is designed to delight.
+4. **Technical Excellence**: Clean architecture, type-safe, performant.
+5. **Easter Eggs**: Because we don't just build tools, we build experiences.
+6. **Real Utility**: Actually connects to Xandeum network via pRPC.
+7. **Accessibility**: Natural language makes blockchain data accessible to everyone.
+8. **Attention to Detail**: From scan lines to procedural audio, nothing is overlooked.
+
+---
+
+<div align="center">
+
+### Built for the Xandeum Ecosystem
+
+<br />
+
+[![Xandeum](https://img.shields.io/badge/Powered_by-Xandeum-00FFFF?style=for-the-badge)](https://xandeum.network/)
+
+<br />
+
+*"The future of blockchain monitoring isn't just functional. It's cinematic."*
+
+<br />
+
+**XANSCAN 360** // SYSTEM VERSION 2.0.45 // NEURAL LINK ESTABLISHED
+
+---
+
+Made with mass mass of mass and mass mass of mass
+
+</div>

@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useXandeumNodes, useNetworkInfo } from '@/hooks/useXandeumNodes';
-import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector } from '@/components/dashboard';
+import { HeroGlobe, StatsHUD, NodeGrid, AINodeSelector, CinematicIntro } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Database, Cpu, Menu, X, Github } from 'lucide-react';
 import { XandeumNode } from '@/types/node';
 import { ParsedQuery } from '@/lib/nl-parser';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 export default function CommandCenter() {
   const [forceMock, setForceMock] = useState(false);
@@ -15,6 +16,8 @@ export default function CommandCenter() {
   const [filteredNodes, setFilteredNodes] = useState<XandeumNode[] | null>(null);
   const [focusNodes, setFocusNodes] = useState<XandeumNode[]>([]);
   const [activeQuery, setActiveQuery] = useState<ParsedQuery | null>(null);
+  const [showIntro, setShowIntro] = useState(true);
+  const { play, startAmbient } = useSoundEffects();
 
   const { nodes, stats, isLoading, error, refetch, lastUpdated, dataSource } = useXandeumNodes({
     forceMock,
@@ -35,273 +38,321 @@ export default function CommandCenter() {
   // Use filtered nodes if available, otherwise all nodes
   const displayNodes = filteredNodes || nodes;
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
-      {/* Animated background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(0, 255, 255, 0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 255, 255, 0.5) 1px, transparent 1px)
-            `,
-            backgroundSize: '100px 100px',
-          }}
-        />
-        {/* Radial gradient overlay */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 100, 150, 0.15) 0%, transparent 60%)',
-          }}
-        />
-        {/* Bottom glow */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse at 50% 100%, rgba(100, 0, 150, 0.1) 0%, transparent 60%)',
-          }}
-        />
-      </div>
+  // Ctrl+M Matrix Mode Easter Egg
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'm') {
+        e.preventDefault();
+        document.documentElement.classList.toggle('matrix-mode');
+        play('glitch');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [play]);
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3"
-            >
-              <div className="relative">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
-                  <Database className="h-5 w-5 text-white" />
+  return (
+    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden font-sans selection:bg-cyan-500/30">
+
+      <AnimatePresence>
+        {showIntro && (
+          <CinematicIntro onComplete={() => {
+            setShowIntro(false);
+            startAmbient(); // Start ambient hum after intro
+          }} />
+        )}
+      </AnimatePresence>
+
+      {/* Main Content - Only visible after intro or if intro is skipped/done */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showIntro ? 0 : 1 }}
+        transition={{ duration: 1 }}
+        className="relative min-h-screen"
+      >
+        {/* Animated background */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          {/* Grid pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.05]"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(0, 255, 255, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: '50px 50px',
+            }}
+          />
+          {/* Radial gradient overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.15) 0%, transparent 70%)',
+            }}
+          />
+          {/* Scanlines */}
+          <div className="scanlines opacity-[0.15]" />
+        </div>
+
+        {/* Navigation - Cinematic Command Bar */}
+        <nav className="fixed top-0 left-0 right-0 z-40">
+          {/* Top accent line */}
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-60" />
+
+          <div className="bg-slate-950/90 backdrop-blur-xl border-b border-cyan-500/20 shadow-[0_4px_30px_rgba(0,255,255,0.1)]">
+            <div className="container mx-auto px-6">
+              <div className="flex items-center justify-between h-16">
+                {/* Logo */}
+                <div
+                  className="flex items-center gap-4 cursor-pointer group"
+                  onClick={() => play('click')}
+                >
+                  {/* Animated Logo Container */}
+                  <div className="relative">
+                    <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 p-[2px] group-hover:scale-110 transition-all duration-300">
+                      <div className="h-full w-full rounded-[10px] bg-slate-950 flex items-center justify-center">
+                        <Database className="h-5 w-5 text-cyan-400" />
+                      </div>
+                    </div>
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 blur-xl opacity-40 group-hover:opacity-80 transition-opacity" />
+                    {/* Pulse ring */}
+                    <div className="absolute inset-0 rounded-xl border border-cyan-500/50 animate-ping opacity-0 group-hover:opacity-30" style={{ animationDuration: '2s' }} />
+                  </div>
+
+                  <div>
+                    <h1 className="text-xl font-bold font-mono tracking-tight flex items-center gap-1">
+                      <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-purple-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">
+                        XANSCAN
+                      </span>
+                      <span className="text-white/80">360</span>
+                    </h1>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <div className={`w-2 h-2 rounded-full ${dataSource === 'live' ? 'bg-green-400' :
+                            dataSource === 'mock' ? 'bg-yellow-400' : 'bg-orange-400'
+                          }`} style={{ boxShadow: dataSource === 'live' ? '0 0 10px rgba(74,222,128,0.8)' : 'none' }} />
+                        {dataSource === 'live' && (
+                          <div className="absolute inset-0 rounded-full bg-green-400/50 animate-ping" />
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-mono">
+                        {dataSource === 'live' ? 'NETWORK ONLINE' : dataSource === 'mock' ? 'SIMULATION' : 'STANDBY'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                {/* Glow effect */}
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 blur-lg opacity-50" />
+
+                {/* Center - System Status */}
+                <div className="hidden lg:flex items-center gap-6 px-6 py-2 rounded-full border border-slate-700/50 bg-slate-900/50">
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                    <span className="text-slate-500">NODES</span>
+                    <span className="text-cyan-400 font-bold">{stats.activeNodes}</span>
+                  </div>
+                  <div className="w-px h-4 bg-slate-700" />
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <span className="text-slate-500">LATENCY</span>
+                    <span className="text-green-400 font-bold">{stats.averageLatency}ms</span>
+                  </div>
+                  <div className="w-px h-4 bg-slate-700" />
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <span className="text-slate-500">REGIONS</span>
+                    <span className="text-purple-400 font-bold">{stats.countriesCount}</span>
+                  </div>
+                </div>
+
+                {/* Desktop menu */}
+                <div className="hidden md:flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setForceMock(!forceMock);
+                      play('click');
+                    }}
+                    className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 font-mono text-xs uppercase tracking-wider border border-transparent hover:border-cyan-500/30 transition-all"
+                  >
+                    <Cpu className="w-4 h-4 mr-2" />
+                    {forceMock ? 'Live' : 'Demo'}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      refetch();
+                      play('scan');
+                    }}
+                    disabled={isLoading}
+                    className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 font-mono text-xs uppercase tracking-wider border border-transparent hover:border-cyan-500/30 transition-all"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                    Sync
+                  </Button>
+
+                  <div className="w-px h-6 bg-slate-700 mx-1" />
+
+                  <a
+                    href="https://github.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all border border-transparent hover:border-slate-600"
+                    onMouseEnter={() => play('hover')}
+                  >
+                    <Github className="w-5 h-5" />
+                  </a>
+                </div>
+
+                {/* Mobile menu button */}
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                >
+                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
               </div>
-              <div>
-                <h1 className="text-lg font-bold">
-                  <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                    XanScan
-                  </span>
-                  <span className="text-white"> 360</span>
-                </h1>
-                <div className="flex items-center gap-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${
-                    dataSource === 'live' ? 'bg-green-400 animate-pulse' :
-                    dataSource === 'mock' ? 'bg-yellow-400' : 'bg-orange-400'
-                  }`} />
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">
-                    {dataSource === 'live' ? 'Live' : dataSource === 'mock' ? 'Demo' : 'Offline'}
-                  </span>
+            </div>
+          </div>
+
+          {/* Mobile menu */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="md:hidden bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 overflow-hidden"
+              >
+                <div className="container mx-auto px-6 py-4 space-y-2">
+                  <button
+                    onClick={() => { setForceMock(!forceMock); setMobileMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 font-mono text-sm"
+                  >
+                    <Cpu className="w-4 h-4" />
+                    {forceMock ? 'SWITCH TO LIVE' : 'SWITCH TO DEMO'}
+                  </button>
+                  <button
+                    onClick={() => { refetch(); setMobileMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 font-mono text-sm"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    REFRESH DATA
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </nav>
+
+        {/* Hero Section with Globe */}
+        <section className="relative pt-16">
+          <HeroGlobe nodes={nodes} focusNodes={focusNodes} isLoading={isLoading} />
+          {/* Overlay gradient for smooth transition */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
+
+          <StatsHUD
+            stats={stats}
+            dataSource={dataSource}
+            lastUpdated={lastUpdated}
+            networkInfo={networkInfo}
+          />
+        </section>
+
+        {/* AI Node Selector */}
+        <section className="relative z-20 container mx-auto px-6 -mt-24 mb-12">
+          <AINodeSelector
+            nodes={nodes}
+            onFilteredNodes={handleFilteredNodes}
+            onFocusNodes={handleFocusNodes}
+          />
+        </section>
+
+        {/* Error Banner */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="container mx-auto px-6 mb-8"
+            >
+              <div className="relative overflow-hidden rounded-xl border border-orange-500/30 bg-orange-500/10 backdrop-blur-sm">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent animate-pulse" />
+                <div className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-orange-500/20">
+                      <RefreshCw className="w-4 h-4 text-orange-400 animate-spin" />
+                    </div>
+                    <div>
+                      <p className="text-orange-400 font-bold font-mono uppercase tracking-wider">Connection Warning</p>
+                      <p className="text-xs text-slate-400 font-mono">
+                        {error.message}. FALLBACK PROTOCOLS ACTIVE.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Desktop menu */}
-            <div className="hidden md:flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setForceMock(!forceMock)}
-                className="text-slate-400 hover:text-white hover:bg-slate-800"
-              >
-                <Cpu className="w-4 h-4 mr-2" />
-                {forceMock ? 'Live Mode' : 'Demo Mode'}
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => refetch()}
-                disabled={isLoading}
-                className="text-slate-400 hover:text-white hover:bg-slate-800"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              >
-                <Github className="w-5 h-5" />
-              </a>
-            </div>
-
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+        {/* Active filter indicator */}
+        <AnimatePresence>
+          {activeQuery && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="container mx-auto px-6 mb-4"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
+              <div className="flex items-center gap-2 text-sm text-slate-400 font-mono bg-slate-900/50 inline-block px-4 py-2 rounded-full border border-cyan-500/20">
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_5px_rgba(6,182,212,0.8)]" />
+                <span>
+                  QUERY RESULTS: <span className="text-cyan-400 font-bold">{displayNodes.length}</span> / <span className="text-slate-500">{nodes.length}</span> TARGETS ACQUIRED
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden bg-slate-900/95 backdrop-blur-xl border-b border-slate-800"
-          >
-            <div className="container mx-auto px-6 py-4 space-y-2">
-              <button
-                onClick={() => { setForceMock(!forceMock); setMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-              >
-                <Cpu className="w-4 h-4" />
-                {forceMock ? 'Switch to Live Mode' : 'Switch to Demo Mode'}
-              </button>
-              <button
-                onClick={() => { refetch(); setMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh Data
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </nav>
+        {/* Node Grid Section */}
+        <section className="relative z-10 container mx-auto px-6 py-12">
+          <NodeGrid nodes={displayNodes} isLoading={isLoading} />
+        </section>
 
-      {/* Hero Section with Globe */}
-      <section className="relative pt-16">
-        <HeroGlobe nodes={nodes} focusNodes={focusNodes} isLoading={isLoading} />
-        <StatsHUD
-          stats={stats}
-          dataSource={dataSource}
-          lastUpdated={lastUpdated}
-          networkInfo={networkInfo}
-        />
-      </section>
-
-      {/* AI Node Selector */}
-      <section className="relative z-20 container mx-auto px-6 -mt-16 mb-8">
-        <AINodeSelector
-          nodes={nodes}
-          onFilteredNodes={handleFilteredNodes}
-          onFocusNodes={handleFocusNodes}
-        />
-      </section>
-
-      {/* Error Banner */}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="container mx-auto px-6 mb-8"
-        >
-          <div className="relative overflow-hidden rounded-xl border border-orange-500/30 bg-orange-500/10 backdrop-blur-sm">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
-            <div className="px-6 py-4">
+        {/* Footer */}
+        <footer className="relative z-10 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-sm">
+          <div className="container mx-auto px-6 py-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-orange-500/20">
-                  <RefreshCw className="w-4 h-4 text-orange-400" />
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
+                  <Database className="h-4 w-4 text-white" />
                 </div>
-                <div>
-                  <p className="text-orange-400 font-medium">Live data unavailable</p>
-                  <p className="text-sm text-slate-400">
-                    Displaying demo data. {error.message}
-                  </p>
-                </div>
+                <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">
+                  XanScan 360 // SYSTEM VERSION 2.0.45
+                </span>
+              </div>
+
+              <div className="flex items-center gap-6 text-xs font-mono text-slate-500 uppercase tracking-wider">
+                <a href="https://xandeum.network" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors hover:glow-text-cyan">
+                  Xandeum
+                </a>
+                <a href="https://docs.xandeum.network" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
+                  Docs
+                </a>
+                <a href="https://discord.gg/uqRSmmM5m" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
+                  Discord
+                </a>
+              </div>
+
+              <div className="text-[10px] text-slate-600 font-mono">
+                SECURE CONNECTION ESTABLISHED
               </div>
             </div>
           </div>
-        </motion.div>
-      )}
-
-      {/* Active filter indicator */}
-      {activeQuery && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="container mx-auto px-6 mb-4"
-        >
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span>
-              Showing <span className="text-cyan-400 font-medium">{displayNodes.length}</span> of{' '}
-              <span className="text-white">{nodes.length}</span> nodes matching your query
-            </span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Node Grid Section */}
-      <section className="relative z-10 container mx-auto px-6 py-12">
-        <NodeGrid nodes={displayNodes} isLoading={isLoading} />
-      </section>
-
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
-                <Database className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-sm text-slate-400">
-                XanScan 360 - Xandeum Network Analytics
-              </span>
-            </div>
-
-            <div className="flex items-center gap-6 text-sm text-slate-400">
-              <a href="https://xandeum.network" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
-                Xandeum
-              </a>
-              <a href="https://docs.xandeum.network" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
-                Docs
-              </a>
-              <a href="https://discord.gg/uqRSmmM5m" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
-                Discord
-              </a>
-            </div>
-
-            <div className="text-xs text-slate-500">
-              Built for Xandeum Hackathon 2025
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Global styles for animations */}
-      <style jsx global>{`
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-          background: rgb(15 23 42);
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgb(51 65 85);
-          border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgb(71 85 105);
-        }
-
-        /* Glow text effect */
-        .glow-text {
-          text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-        }
-
-        /* Glassmorphism card */
-        .glass-card {
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-      `}</style>
+        </footer>
+      </motion.div>
     </div>
   );
 }
